@@ -1,0 +1,18 @@
+---
+title: "Sentiment Analysis with Text Mining with R"
+author: "ZIAHO YU"
+format: html
+editor: visual
+---
+
+## 1.How will I tackle the problem?
+
+To begin with, I will use the janeaustenr package to reproduce the original sample code from the book, and then organize and analyze the text of 'The Great Gatsby'. Next, I will split the text into words and use at least two sentiment lexicons to observe the emotional shifts in the novel. Finally, I will compare the differences between the results of the various lexicon analyses.
+
+## 2.What data challenges do I anticipate?
+
+Cleaning the text data for the entire book may require additional code and could leave behind some unusual outliers, so further processing will be necessary in follow-up analyses. Additionally, certain words may have different meanings in different contexts, which could also cause deviations in the overall sentiment curve.
+
+The source link is : 'https://www.gutenberg.org/ebooks/64317'.
+
+---
