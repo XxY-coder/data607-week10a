@@ -15,4 +15,178 @@ Cleaning the text data for the entire book may require additional code and could
 
 The source link is : 'https://www.gutenberg.org/ebooks/64317'.
 
----
+------------------------------------------------------------------------
+
+## 1.Reproduce the Base Example
+
+This section reproduces the Chapter 2 sentiment analysis example from 'Text Mining with R: A Tidy Approach' by Julia Silge and David Robinson.
+
+```{r}
+library(textdata)
+library(tidytext)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, 
+                                regex("^chapter [\\divxlc]", 
+                                      ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+```
+
+```{r}
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE)
+```
+
+```{r}
+library(tidyr)
+
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>% 
+  mutate(sentiment = positive - negative)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+## Citation
+
+Silge, J., & Robinson, D. (2017). *Text Mining with R: A Tidy Approach*. O'Reilly Media. Chapter 2: Sentiment analysis with tidy data. https://www.tidytextmining.com/sentiment
+
+------------------------------------------------------------------------
+
+## 2.Extend the Analysis
+
+I use a different text corpus: The Great Gatsby by F. Scott Fitzgerald.
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(gutenbergr)
+
+gatsby_raw <- gutenberg_download(64317)
+
+tidy_gatsby <-
+  gatsby_raw %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", ignore_case = TRUE)))
+  ) %>%
+  unnest_tokens(word, text)
+
+head(tidy_gatsby)
+```
+
+```{r}
+gatsby_sentiment <- 
+  tidy_gatsby |>
+  inner_join(get_sentiments("bing")) |>
+  count(index = linenumber %/% 80, sentiment) |>
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
+  mutate(sentiment = positive - negative)
+
+head(gatsby_sentiment,10)
+```
+
+```{r}
+ggplot(
+  gatsby_sentiment, 
+  aes(index, sentiment)
+) +
+  geom_col(show.legend = FALSE,fill = "pink") +
+  theme_minimal()
+```
+
+```{r}
+afinn <-
+  tidy_gatsby %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 80) %>% 
+  summarise(sentiment = sum(value)) %>% 
+  mutate(method = "AFINN")
+
+bing_and_nrc <- 
+  bind_rows(
+  tidy_gatsby %>% 
+    inner_join(get_sentiments("bing")) %>%
+    mutate(method = "Bing et al."),
+  tidy_gatsby %>% 
+    inner_join(get_sentiments("nrc") %>% 
+                 filter(sentiment %in% c("positive", "negative"))) %>%
+    mutate(method = "NRC")) %>%
+  count(method, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+bind_rows(afinn, bing_and_nrc) %>%
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y") +
+  theme_minimal()
+```
+
+## Conclusion based on the chart.
+
+1.  Based on an analysis of 'The Great Gatsby', the generated chart shows that negative sentiments are predominantly present throughout the novel, with a particularly high concentration of negative sentiments toward the end, which aligns with the story’s tragic ending. Overall, the text exhibits a negative emotional bias.
+
+2.  A comparison of the three methods reveals that AFINN shows more positive sentiment in the front section, while NRC displays mostly positive sentiment. Negative sentiment in all three methods is concentrated in the final section, which aligns with the tragic ending of 'The Great Gatsby'.
+
+------------------------------------------------------------------------
+
+## Additional sentiment lexicon through external research.
+
+External source link: 'https://rstudio-pubs-static.s3.amazonaws.com/676279_2fa8c2a7a3da4e7089e24442758e9d1b.html'
+
+```{r}
+library(syuzhet)
+
+jockers_sentiment <- 
+  gatsby_raw %>%
+  mutate(
+    linenumber = row_number(),
+    index = linenumber %/% 80,
+    jockers = get_sentiment(text, method = "syuzhet")
+  ) %>%
+  group_by(index) %>%
+  summarise(sentiment = sum(jockers, na.rm = TRUE), .groups = "drop")
+
+head(jockers_sentiment, 10)
+```
+
+```{r}
+ggplot(
+  jockers_sentiment,
+  aes(index, sentiment)
+) +
+  geom_col(show.legend = FALSE, fill = "pink") +
+  theme_minimal() +
+  labs(
+    title = "Sentiment in The Great Gatsby Using Jockers/Syuzhet",
+    x = "Section",
+    y = "Sentiment"
+)
+```
+
+## Conclusion
+
+Using the syuzhet package for sentiment analysis, the graph shows that the sentiment scores for 'The Great Gatsby' are generally positive in the first half, but fluctuate more noticeably in the second half, with a higher number of negative sentiment. In particular, the sentiment scores drop significantly toward the end, which aligns with the novel’s plot as it gradually moves toward a tragic conclusion. 
+
+Similar to the previous AFINN results, this illustrates a shift in the novel’s sentiment from relatively positive to relatively negative, in contrast to Biny’s analysis showing a consistently negative tone throughout the book and NRC’s analysis indicating a mostly positive sentiment.
