@@ -1,6 +1,6 @@
 ---
 title: "Sentiment Analysis with Text Mining with R"
-author: "ZIAHO YU"
+author: "ZIHAO YU"
 format: html
 editor: visual
 ---
@@ -151,7 +151,7 @@ bind_rows(afinn, bing_and_nrc) %>%
 
 ------------------------------------------------------------------------
 
-## Additional sentiment lexicon through external research.
+## Additional Sentiment Analysis Using Another R Package.
 
 External source link: 'https://rstudio-pubs-static.s3.amazonaws.com/676279_2fa8c2a7a3da4e7089e24442758e9d1b.html'
 
@@ -189,4 +189,8 @@ ggplot(
 
 Using the syuzhet package for sentiment analysis, the graph shows that the sentiment scores for 'The Great Gatsby' are generally positive in the first half, but fluctuate more noticeably in the second half, with a higher number of negative sentiment. In particular, the sentiment scores drop significantly toward the end, which aligns with the novel’s plot as it gradually moves toward a tragic conclusion. 
 
-Similar to the previous AFINN results, this illustrates a shift in the novel’s sentiment from relatively positive to relatively negative, in contrast to Biny’s analysis showing a consistently negative tone throughout the book and NRC’s analysis indicating a mostly positive sentiment.
+Similar to the previous AFINN results, this illustrates a shift in the novel’s sentiment from relatively positive to relatively negative, in contrast to Bing’s analysis showing a consistently negative tone throughout the book and NRC’s analysis indicating a mostly positive sentiment.
+
+## How the results differ from the original example
+
+Compared with the original Jane Austen example, this analysis uses only one novel, The Great Gatsby, instead of multiple Jane Austen novels. The Gatsby results show a stronger negative shift near the end, which fits the tragic ending of the novel.
